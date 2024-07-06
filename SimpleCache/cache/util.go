@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 const (
@@ -44,11 +45,14 @@ func ParseSize(size string) (int64, string) {
 		bytenum = 0
 		panic("不支持的大小")
 	}
-
-	fmt.Println(bytenum, unit)
 	return bytenum, unit
 }
 
 func FormatKey(key string) string {
 	return string([]byte(key))
+}
+
+func CalSize(key string, value interface{}) int64 {
+	s := unsafe.Sizeof(key) + unsafe.Sizeof(value)
+	return int64(s)
 }
