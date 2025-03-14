@@ -15,10 +15,10 @@ type MCache interface {
 }
 
 type memCache struct {
-	// 最大内存
-	MaxMemorySize int64
 	// B,KB,MB,GB
 	MaxMemorySizeStr string
+	// 最大内存
+	MaxMemorySize int64
 	// 当前使用内存
 	CurUseMemory int64
 
@@ -46,18 +46,17 @@ func (mc *memCache) Set(key string, value interface{}, exp int) {
 		val: value,
 		exp: time.Now().Add(time.Second * time.Duration(exp)),
 	}
-	//todo size cal
-	//sizeof := int64(unsafe.Sizeof(v))
 	sizeof := CalSize(key, v)
-	fmt.Println("内存对比: ", mc.CurUseMemory+sizeof, mc.MaxMemorySize)
-	if (mc.CurUseMemory + sizeof) > mc.MaxMemorySize {
-
-		// 内存不足，删除OR 清除过期数据 OR LRU释放内存
+	mc.CurUseMemory += sizeof
+	fmt.Println("内存对比: ", mc.CurUseMemory, mc.MaxMemorySize)
+	if mc.CurUseMemory > mc.MaxMemorySize {
 		fmt.Println("memory no space!")
+		mc.CurUseMemory -= sizeof
 		return
 	}
 	mc.Value[key] = *v
 }
+
 func (mc *memCache) Get(key string) interface{} {
 	value, ok := mc.Value[key]
 	if ok {
@@ -68,6 +67,7 @@ func (mc *memCache) Get(key string) interface{} {
 	}
 	return value.val
 }
+
 func (mc *memCache) Del(key string) {
 	delete(mc.Value, key)
 }
